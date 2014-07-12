@@ -1,3 +1,9 @@
+python-rfc3986 (0.2.0-2) unstable; urgency=medium
+
+  * Fix README.rst which prevents builds in Wheezy because of unicode.
+
+ -- Thomas Goirand <zigo@debian.org>  Sat, 12 Jul 2014 23:30:50 +0800
+
 python-rfc3986 (0.2.0-1) unstable; urgency=medium
 
   * Initial release. (Closes: #754573)
