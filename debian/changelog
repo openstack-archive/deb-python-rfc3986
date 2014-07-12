@@ -1,0 +1,5 @@
+python-rfc3986 (0.2.0-1) unstable; urgency=medium
+
+  * Initial release. (Closes: #754573)
+
+ -- Thomas Goirand <zigo@debian.org>  Sat, 12 Jul 2014 23:05:54 +0800

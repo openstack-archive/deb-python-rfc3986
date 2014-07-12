@@ -1,0 +1,39 @@
+Source: python-rfc3986
+Section: python
+Priority: optional
+Maintainer: PKG OpenStack <openstack-devel@lists.alioth.debian.org>
+Uploaders: Julien Danjou <acid@debian.org>,
+           Thomas Goirand <zigo@debian.org>,
+           Mehdi Abaakouk <sileht@sileht.net>,
+           Gonéri Le Bouder <goneri@debian.org>
+Build-Depends: debhelper (>= 9),
+               python-all (>= 2.6.6-3~),
+               python-setuptools,
+               python-pytest,
+               python3-pytest,
+               python3-all,
+               python3-setuptools
+Standards-Version: 3.9.5
+Vcs-Browser: http://anonscm.debian.org/gitweb/?p=openstack/python-rfc3986.git
+Vcs-Git: git://anonscm.debian.org/openstack/python-rfc3986.git
+Homepage: https://rfc3986.rtfd.org
+
+Package: python-rfc3986
+Architecture: all
+Pre-Depends: dpkg (>= 1.15.6~)
+Depends: ${misc:Depends}, ${python:Depends}
+Description: validating URI references per RFC 3986 - Python 2.x
+ This package provides a Python implementation of RFC 3986, including
+ validation and authority parsing.
+ .
+ This package contains the Python 2.x module.
+
+Package: python3-rfc3986
+Architecture: all
+Pre-Depends: dpkg (>= 1.15.6~)
+Depends: ${misc:Depends}, ${python3:Depends}
+Description: validating URI references per RFC 3986 - Python 3.x
+ This package provides a Python implementation of RFC 3986, including
+ validation and authority parsing.
+ .
+ This package contains the Python 3.x module.
