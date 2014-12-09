@@ -505,3 +505,10 @@ class TestURIReferencesResolve:
         T = R.resolve_with(B)
         assert T.path is None
         assert T.query == 'query'
+
+
+def test_backslashes_are_invalid():
+    uri = URIReference.from_string(
+        r'http://fr.dbpedia.org/resource/\201dimbourg'
+        )
+    assert uri.is_valid() is False
