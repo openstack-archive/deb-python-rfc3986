@@ -19,7 +19,8 @@ from .exceptions import InvalidAuthority, ResolutionError
 from .misc import (
     ABSOLUTE_URI_MATCHER, FRAGMENT_MATCHER, IPv4_MATCHER, PATH_MATCHER,
     QUERY_MATCHER, SCHEME_MATCHER, SUBAUTHORITY_MATCHER, URI_MATCHER,
-    URI_COMPONENTS, merge_paths
+    URI_COMPONENTS, merge_paths, subauthority_splitter,
+    valid_ipv4_host_address
     )
 from .normalizers import (
     encode_component, normalize_scheme, normalize_authority, normalize_path,
@@ -30,15 +31,18 @@ from .normalizers import (
 class URIReference(namedtuple('URIReference', URI_COMPONENTS)):
     slots = ()
 
-    def __new__(cls, scheme, authority, path, query, fragment,
-                encoding='utf-8'):
+    def __new__(cls, scheme, authority, path, query, fragment, userinfo=None,
+                host=None, port=None, encoding='utf-8'):
         ref = super(URIReference, cls).__new__(
             cls,
             scheme or None,
             authority or None,
             path or None,
             query or None,
-            fragment or None)
+            fragment or None,
+            userinfo,
+            host,
+            port)
         ref.encoding = encoding
         return ref
 
@@ -66,16 +70,24 @@ class URIReference(namedtuple('URIReference', URI_COMPONENTS)):
         :param str encoding: The encoding of the string provided
         :returns: :class:`URIReference` or subclass thereof
         """
+        userinfo = host = port = None
         uri_string = to_str(uri_string, encoding)
 
         split_uri = URI_MATCHER.match(uri_string).groupdict()
+        if split_uri['authority']:
+            userinfo, host, port = subauthority_splitter(
+                split_uri['authority'], encoding
+            )
         return cls(split_uri['scheme'], split_uri['authority'],
                    encode_component(split_uri['path'], encoding),
                    encode_component(split_uri['query'], encoding),
-                   encode_component(split_uri['fragment'], encoding), encoding)
+                   encode_component(split_uri['fragment'], encoding),
+                   userinfo=userinfo, host=host, port=port, encoding=encoding)
 
     def authority_info(self):
         """Returns a dictionary with the ``userinfo``, ``host``, and ``port``.
+
+        .. warning:: This has been deprecated as of version 0.3.0
 
         If the authority is not valid, it will raise a ``InvalidAuthority``
         Exception.
@@ -90,54 +102,16 @@ class URIReference(namedtuple('URIReference', URI_COMPONENTS)):
         if not self.authority:
             return {'userinfo': None, 'host': None, 'port': None}
 
-        match = SUBAUTHORITY_MATCHER.match(self.authority)
-
-        if match is None:
+        subauthority = subauthority_splitter(self.authority, self.encoding)
+        if all(i is None for i in subauthority):
             # In this case, we have an authority that was parsed from the URI
             # Reference, but it cannot be further parsed by our
             # SUBAUTHORITY_MATCHER. In this case it must not be a valid
             # authority.
             raise InvalidAuthority(self.authority.encode(self.encoding))
 
-        # We had a match, now let's ensure that it is actually a valid host
-        # address if it is IPv4
-        matches = match.groupdict()
-        host = matches.get('host')
-
-        if (host and IPv4_MATCHER.match(host) and not
-                valid_ipv4_host_address(host)):
-            # If we have a host, it appears to be IPv4 and it does not have
-            # valid bytes, it is an InvalidAuthority.
-            raise InvalidAuthority(self.authority.encode(self.encoding))
-
-        return matches
-
-    @property
-    def host(self):
-        """If present, a string representing the host."""
-        try:
-            authority = self.authority_info()
-        except InvalidAuthority:
-            return None
-        return authority['host']
-
-    @property
-    def port(self):
-        """If present, the port (as a string) extracted from the authority."""
-        try:
-            authority = self.authority_info()
-        except InvalidAuthority:
-            return None
-        return authority['port']
-
-    @property
-    def userinfo(self):
-        """If present, the userinfo extracted from the authority."""
-        try:
-            authority = self.authority_info()
-        except InvalidAuthority:
-            return None
-        return authority['userinfo']
+        keys = ('userinfo', 'host', 'port')
+        return dict(zip(keys, subauthority))
 
     def is_absolute(self):
         """Determine if this URI Reference is an absolute URI.
@@ -257,11 +231,16 @@ class URIReference(namedtuple('URIReference', URI_COMPONENTS)):
         :returns: A new reference object with normalized components.
         :rtype: URIReference
         """
+        subauthority = (self.userinfo, self.host, self.port)
+        if self.authority and all(i is None for i in subauthority):
+            # NOTE(sigmavirus24): This is a backwards compatibility shim for
+            # users who do not explicitly set userinfo, host, or port
+            subauthority = subauthority_splitter(self.authority,
+                                                 self.encoding)
         # See http://tools.ietf.org/html/rfc3986#section-6.2.2 for logic in
         # this method.
         return URIReference(normalize_scheme(self.scheme or ''),
-                            normalize_authority(
-                                (self.userinfo, self.host, self.port)),
+                            normalize_authority(subauthority),
                             normalize_path(self.path or ''),
                             normalize_query(self.query or ''),
                             normalize_fragment(self.fragment or ''))
@@ -305,14 +284,14 @@ class URIReference(namedtuple('URIReference', URI_COMPONENTS)):
         resolving = self
 
         if not strict and resolving.scheme == base_uri.scheme:
-            resolving = resolving.replace(scheme=None)
+            resolving = resolving.copy_with(scheme=None)
 
         # http://tools.ietf.org/html/rfc3986#page-32
         if resolving.scheme is not None:
-            target = resolving.replace(path=normalize_path(resolving.path))
+            target = resolving.copy_with(path=normalize_path(resolving.path))
         else:
             if resolving.authority is not None:
-                target = resolving.replace(
+                target = resolving.copy_with(
                     scheme=base_uri.scheme,
                     path=normalize_path(resolving.path)
                 )
@@ -322,7 +301,7 @@ class URIReference(namedtuple('URIReference', URI_COMPONENTS)):
                         query = resolving.query
                     else:
                         query = base_uri.query
-                    target = resolving.replace(
+                    target = resolving.copy_with(
                         scheme=base_uri.scheme,
                         authority=base_uri.authority,
                         path=base_uri.path,
@@ -335,7 +314,7 @@ class URIReference(namedtuple('URIReference', URI_COMPONENTS)):
                         path = normalize_path(
                             merge_paths(base_uri, resolving.path)
                         )
-                    target = resolving.replace(
+                    target = resolving.copy_with(
                         scheme=base_uri.scheme,
                         authority=base_uri.authority,
                         path=path,
@@ -363,11 +342,5 @@ class URIReference(namedtuple('URIReference', URI_COMPONENTS)):
             result_list.extend(['#', self.fragment])
         return ''.join(result_list)
 
-    def replace(self, **kwargs):
+    def copy_with(self, **kwargs):
         return self._replace(**kwargs)
-
-
-def valid_ipv4_host_address(host):
-    # If the host exists, and it might be IPv4, check each byte in the
-    # address.
-    return all([0 <= int(byte, base=10) <= 255 for byte in host.split('.')])

@@ -2,7 +2,7 @@
 import pytest
 
 from rfc3986.exceptions import InvalidAuthority, ResolutionError
-from rfc3986.misc import URI_MATCHER
+from rfc3986.misc import URI_MATCHER, subauthority_splitter
 from rfc3986.uri import URIReference
 
 
@@ -153,15 +153,23 @@ class TestURIReferenceParsesURIs:
         assert uri.userinfo == 'user:pass'
         assert uri.port == '443'
 
-    def test_authority_info_raises_InvalidAuthority(self, invalid_uri):
+    def test_from_string_raises_InvalidAuthority(self):
+        """An invalid URI raises the appropriate exception on parse."""
+        with pytest.raises(InvalidAuthority):
+            URIReference.from_string('https://256.256.256.256')
+
+    # NOTE(sigmavirus24): Yes, parametrize is the correct spelling.
+    @pytest.mark.parametrize('invalid_host', invalid_hosts)
+    def test_authority_info_raises_InvalidAuthority(self, invalid_host):
         """Test that an invalid IPv6 is caught by authority_info()."""
-        uri = URIReference.from_string(invalid_uri)
+        uri = URIReference(None, invalid_host, None, None, None)
         with pytest.raises(InvalidAuthority):
             uri.authority_info()
 
-    def test_attributes_catch_InvalidAuthority(self, invalid_uri):
+    @pytest.mark.parametrize('invalid_host', invalid_hosts)
+    def test_attributes_catch_InvalidAuthority(self, invalid_host):
         """Test that an invalid IPv6 is caught by authority_info()."""
-        uri = URIReference.from_string(invalid_uri)
+        uri = URIReference(None, invalid_host, None, None, None)
         assert uri.host is None
         assert uri.userinfo is None
         assert uri.port is None
@@ -255,8 +263,9 @@ class TestURIValidation:
         assert uri.is_valid() is True
 
     # Invalid URI tests
-    def test_invalid_uri_is_not_valid(self, invalid_uri):
-        uri = URIReference.from_string(invalid_uri)
+    @pytest.mark.parametrize('invalid_host', invalid_hosts)
+    def test_invalid_uri_is_not_valid(self, invalid_host):
+        uri = URIReference(None, invalid_host, None, None, None)
         assert uri.is_valid() is False
 
     def test_invalid_scheme(self):
@@ -355,7 +364,11 @@ class TestURIReferenceComparesToStrings:
 
 class TestURIReferenceComparesToTuples:
     def to_tuple(self, uri):
-        return URI_MATCHER.match(uri).groups()
+        match = URI_MATCHER.match(uri).groups()
+        subauth_match = (None, None, None)
+        if match[1]:  # If there's an authority part, split it
+            subauth_match = subauthority_splitter(match[1], 'utf-8')
+        return match + subauth_match
 
     def test_basic_uri(self, basic_uri):
         uri = URIReference.from_string(basic_uri)

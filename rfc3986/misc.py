@@ -22,9 +22,12 @@ expressions for parsing and validating URIs and their components.
 
 import re
 
+from .exceptions import InvalidAuthority
+
 # These are enumerated for the named tuple used as a superclass of
 # URIReference
-URI_COMPONENTS = ['scheme', 'authority', 'path', 'query', 'fragment']
+URI_COMPONENTS = ('scheme', 'authority', 'path', 'query', 'fragment',
+                  'userinfo', 'host', 'port')
 
 important_characters = {
     'generic_delimiters': ":/?#[]@",
@@ -212,3 +215,30 @@ def merge_paths(base_uri, relative_path):
         path = base_uri.path or ''
         index = path.rfind('/')
         return path[:index] + '/' + relative_path
+
+
+def valid_ipv4_host_address(host):
+    # If the host exists, and it might be IPv4, check each byte in the
+    # address.
+    return all([0 <= int(byte, base=10) <= 255 for byte in host.split('.')])
+
+
+def subauthority_splitter(authority, encoding):
+    if hasattr(authority, 'decode'):
+        authority = authority.decode(encoding)
+
+    match = SUBAUTHORITY_MATCHER.match(authority)
+
+    if match is None:
+        return (None, None, None)
+
+    match_dict = match.groupdict()
+    userinfo, host, port = (match_dict['userinfo'], match_dict['host'],
+                            match_dict['port'])
+
+    if (host and IPv4_MATCHER.match(host) and not
+            valid_ipv4_host_address(host)):
+        # If we have a host, it appears to be IPv4 and it does not have
+        # valid bytes, it is an InvalidAuthority.
+        raise InvalidAuthority(authority.encode(encoding))
+    return (userinfo, host, port)
