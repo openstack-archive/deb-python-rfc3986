@@ -224,9 +224,6 @@ def valid_ipv4_host_address(host):
 
 
 def subauthority_splitter(authority, encoding):
-    if hasattr(authority, 'decode'):
-        authority = authority.decode(encoding)
-
     match = SUBAUTHORITY_MATCHER.match(authority)
 
     if match is None:
