@@ -78,6 +78,8 @@ class URIReference(namedtuple('URIReference', URI_COMPONENTS)):
             userinfo, host, port = subauthority_splitter(
                 split_uri['authority'], encoding
             )
+            if userinfo is None and host is None and port is None:
+                raise InvalidAuthority(split_uri['authority'].encode(encoding))
         return cls(split_uri['scheme'], split_uri['authority'],
                    encode_component(split_uri['path'], encoding),
                    encode_component(split_uri['query'], encoding),

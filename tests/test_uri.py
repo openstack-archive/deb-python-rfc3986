@@ -153,10 +153,10 @@ class TestURIReferenceParsesURIs:
         assert uri.userinfo == 'user:pass'
         assert uri.port == '443'
 
-    def test_from_string_raises_InvalidAuthority(self):
+    def test_from_string_raises_InvalidAuthority(self, invalid_uri):
         """An invalid URI raises the appropriate exception on parse."""
         with pytest.raises(InvalidAuthority):
-            URIReference.from_string('https://256.256.256.256')
+            URIReference.from_string(invalid_uri)
 
     # NOTE(sigmavirus24): Yes, parametrize is the correct spelling.
     @pytest.mark.parametrize('invalid_host', invalid_hosts)
