@@ -3,5 +3,5 @@
 .tox
 *.egg-info
 build/
-doc/_build/
+docs/_build/
 dist/
