@@ -3,10 +3,13 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to rfc3986's documentation!
-===================================
+rfc3986
+=======
 
-Contents:
+``rfc3986``
+
+Overview
+--------
 
 .. toctree::
    :maxdepth: 2
