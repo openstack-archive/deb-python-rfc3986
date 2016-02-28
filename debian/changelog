@@ -1,3 +1,9 @@
+python-rfc3986 (0.2.0-3) UNRELEASED; urgency=medium
+
+  * Fixed VCS URLs (https).
+
+ -- Ondřej Nový <novy@ondrej.org>  Sun, 28 Feb 2016 15:49:27 +0100
+
 python-rfc3986 (0.2.0-2) unstable; urgency=medium
 
   * Fix README.rst which prevents builds in Wheezy because of unicode.
