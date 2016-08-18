@@ -118,7 +118,14 @@ ipv_future = 'v[0-9A-Fa-f]+.[%s]+' % (
     important_characters['re_sub_delimiters'] +
     ':')
 
-ip_literal = '\[({0}|{1})\]'.format(ipv6, ipv_future)
+pct_encoded = '%[A-Fa-f0-9]{2}'
+zone_id = '([%(unreserved)s]|%(pct_encoded)s)+' % {
+    'unreserved': important_characters['re_unreserved'],
+    'pct_encoded': pct_encoded,
+}
+ipv6_addrz = ipv6 + '%25' + zone_id
+
+ip_literal = '\[({0}|{1}|{2})\]'.format(ipv6, ipv_future, ipv6_addrz)
 
 # Pattern for matching the host piece of the authority
 HOST_PATTERN = '({0}|{1}|{2})'.format(reg_name, ipv4, ip_literal)
@@ -140,7 +147,6 @@ IPv4_MATCHER = re.compile('^' + ipv4 + '$')
 # about the path patterns defined below.
 
 # Percent encoded character values
-pct_encoded = '%[A-Fa-f0-9]{2}'
 pchar = ('([' + important_characters['re_unreserved']
          + important_characters['re_sub_delimiters']
          + ':@]|%s)' % pct_encoded)
