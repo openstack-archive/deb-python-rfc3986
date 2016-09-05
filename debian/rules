@@ -1,28 +1,18 @@
 #!/usr/bin/make -f
 
-PYTHONS:=$(shell pyversions -vr)
-PYTHON3S:=$(shell py3versions -vr)
-
 UPSTREAM_GIT := https://github.com/sigmavirus24/rfc3986.git
--include /usr/share/openstack-pkg-tools/pkgos.make
+include /usr/share/openstack-pkg-tools/pkgos.make
 
 %:
 	dh $@ --buildsystem=python_distutils --with python2,python3
 
-override_dh_install:
-	set -e && for pyvers in $(PYTHONS); do \
-		python$$pyvers setup.py install --install-layout=deb \
-			--root $(CURDIR)/debian/python-rfc3986; \
-	done
-	set -e && for pyvers in $(PYTHON3S); do \
-		python$$pyvers setup.py install --install-layout=deb \
-			--root $(CURDIR)/debian/python3-rfc3986; \
-	done
+override_dh_auto_install:
+	pkgos-dh_auto_install
 
 override_dh_auto_test:
 ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
-	set -e && for pyvers in $(PYTHONS) $(PYTHON3S); do \
-		PYTHON=python$$pyvers py.test-$$pyvers tests ; \
+	set -e ; for pyvers in $(PYTHONS) $(PYTHON3S); do \
+		PYTHON=python$$pyvers python$$pyvers -m pytest tests ; \
 	done
 endif
 

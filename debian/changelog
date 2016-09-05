@@ -1,9 +1,18 @@
-python-rfc3986 (0.2.0-3) UNRELEASED; urgency=medium
+python-rfc3986 (0.2.0-3) unstable; urgency=medium
 
+  [ Ondřej Nový ]
   * Fixed VCS URLs (https).
   * d/rules: Changed UPSTREAM_GIT protocol to https
 
- -- Ondřej Nový <novy@ondrej.org>  Sun, 28 Feb 2016 15:49:27 +0100
+  [ Thomas Goirand ]
+  * Using python -m pytest instead of py.test-3.5 (Closes: #835245835245).
+  * Using goodies from openstack-pkg-tools >= 52~.
+  * Standards-Version: 3.9.8.
+  * Removed inactive uploaders.
+  * Fixed debian/copyright ordering.
+  * Removed pre-depends on dpkg version, moved pytest to b-d-indep.
+
+ -- Thomas Goirand <zigo@debian.org>  Mon, 05 Sep 2016 08:00:17 +0000
 
 python-rfc3986 (0.2.0-2) unstable; urgency=medium
 
