@@ -32,7 +32,7 @@ important_characters = {
     # We need to escape the '*' in this case
     're_sub_delimiters': "!$&'()\*+,;=",
     'unreserved_chars': ('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-                         '012345789._~-'),
+                         '0123456789._~-'),
     # We need to escape the '-' in this case:
     're_unreserved': 'A-Za-z0-9._~\-',
     }
@@ -73,7 +73,11 @@ URI_MATCHER = re.compile(expression)
 
 # Host patterns, see: http://tools.ietf.org/html/rfc3986#section-3.2.2
 # The pattern for a regular name, e.g.,  www.google.com, api.github.com
-reg_name = '[\w\d.]+'
+reg_name = '(({0})*|[{1}]*)'.format(
+    '%[0-9A-Fa-f]{2}',
+    important_characters['re_sub_delimiters'] +
+    important_characters['re_unreserved']
+    )
 # The pattern for an IPv4 address, e.g., 192.168.255.255, 127.0.0.1,
 ipv4 = '(\d{1,3}.){3}\d{1,3}'
 # Hexadecimal characters used in each piece of an IPv6 address
@@ -124,6 +128,8 @@ SUBAUTHORITY_MATCHER = re.compile((
     '(?P<host>{0}?)'  # host
     ':?(?P<port>\d+)?$'  # port
     ).format(HOST_PATTERN))
+
+IPv4_MATCHER = re.compile('^' + ipv4 + '$')
 
 
 # ####################
@@ -192,6 +198,17 @@ hier_part = '(//%s%s|%s|%s|%s)' % (
     )
 
 # See http://tools.ietf.org/html/rfc3986#section-4.3
-ABSOLUTE_URI_MATCHER = re.compile('^%s:%s(\?%s)$' % (
-    component_pattern_dict['scheme'], hier_part, QUERY_MATCHER.pattern
+ABSOLUTE_URI_MATCHER = re.compile('^%s:%s(\?%s)?$' % (
+    component_pattern_dict['scheme'], hier_part, QUERY_MATCHER.pattern[1:-1]
     ))
+
+
+# Path merger as defined in http://tools.ietf.org/html/rfc3986#section-5.2.3
+def merge_paths(base_uri, relative_path):
+    """Merge a base URI's path with a relative URI's path."""
+    if base_uri.path is None and base_uri.authority is not None:
+        return '/' + relative_path
+    else:
+        path = base_uri.path or ''
+        index = path.rfind('/')
+        return path[:index] + '/' + relative_path
