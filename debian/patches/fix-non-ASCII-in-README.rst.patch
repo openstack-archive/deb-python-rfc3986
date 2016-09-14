@@ -3,14 +3,16 @@ Author: Thomas Goirand <zigo@debian.org>
 Forwarded: no
 Last-Update: 2014-07-12
 
---- python-rfc3986-0.2.0.orig/README.rst
-+++ python-rfc3986-0.2.0/README.rst
-@@ -37,7 +37,7 @@ With a parsed URI you can access data ab
+Index: deb-python-rfc3986/README.rst
+===================================================================
+--- deb-python-rfc3986.orig/README.rst
++++ deb-python-rfc3986/README.rst
+@@ -78,7 +78,7 @@ It can also parse URIs with unicode pres
  
- It can also parse URIs with unicode present::
+ .. code-block:: python
  
 -    uni = uri_reference(b'http://httpbin.org/get?utf8=\xe2\x98\x83')  # ☃
 +    uni = uri_reference(b'http://httpbin.org/get?utf8=\xe2\x98\x83')
      print(uni.query)  # utf8=%E2%98%83
  
- With a parsed URI you can also validate it::
+ With a parsed URI you can also validate it:

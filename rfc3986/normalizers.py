@@ -35,15 +35,22 @@ def normalize_authority(authority):
 
 
 def normalize_path(path):
+    if not path:
+        return path
+
     path = normalize_percent_characters(path)
     return remove_dot_segments(path)
 
 
 def normalize_query(query):
+    if not query:
+        return query
     return normalize_percent_characters(query)
 
 
 def normalize_fragment(fragment):
+    if not fragment:
+        return fragment
     return normalize_percent_characters(fragment)
 
 

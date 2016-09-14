@@ -1,3 +1,9 @@
+python-rfc3986 (0.3.1-1) experimental; urgency=medium
+
+  * New upstream release.
+
+ -- Thomas Goirand <zigo@debian.org>  Wed, 14 Sep 2016 10:44:45 +0200
+
 python-rfc3986 (0.2.0-3) unstable; urgency=medium
 
   [ Ondřej Nový ]

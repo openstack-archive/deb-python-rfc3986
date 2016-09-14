@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import io
 import os
 import sys
 
@@ -18,10 +19,10 @@ packages = [
     'rfc3986',
 ]
 
-with open('README.rst') as f:
+with io.open('README.rst', encoding='utf-8') as f:
     readme = f.read()
 
-with open('HISTORY.rst') as f:
+with io.open('HISTORY.rst', encoding='utf-8') as f:
     history = f.read()
 
 setup(
@@ -31,13 +32,11 @@ setup(
     long_description=readme + '\n\n' + history,
     author='Ian Cordasco',
     author_email='ian.cordasco@rackspace.com',
-    url='https://rfc3986.rtfd.org',
+    url='https://rfc3986.readthedocs.org',
     packages=packages,
     package_data={'': ['LICENSE']},
-    package_dir={'requests': 'requests'},
     include_package_data=True,
     license='Apache 2.0',
-    zip_safe=False,
     classifiers=(
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
